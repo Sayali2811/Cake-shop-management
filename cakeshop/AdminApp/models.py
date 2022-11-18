@@ -5,6 +5,9 @@ class Category(models.Model):
     category_name=models.CharField(max_length=20)
     class Meta:
         db_table='Category'
+    
+    def __str__(self):
+        return self.category_name
 
 class Product(models.Model):
     pname=models.CharField(max_length=20)
