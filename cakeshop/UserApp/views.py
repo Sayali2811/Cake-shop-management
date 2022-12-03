@@ -83,9 +83,10 @@ def addToCart(request):
         else:
             return redirect(login)
 def ShowAllCartItems(request):
+    uname=request.session['uname']
+    user=UserInfo.objects.get(uname=uname)
     if(request.method=='GET'):
-        uname=request.session['uname']
-        user=UserInfo.objects.get(uname=uname)
+
         cartitems=MyCart.objects.filter(user=user)
         total=0
         for item in cartitems:
@@ -94,4 +95,15 @@ def ShowAllCartItems(request):
         request.session["total"] = total
         return render(request,"ShowAllCart.html",{"items":cartitems})
     else:
-        pass
+        action=request.POST['action']
+        id=request.POST['cakeid']
+        cake=Product.objects.get(id=id)
+        item=MyCart.objects.get(user=user,cake=cake)
+        if(action=='remove'):
+            item.delete()
+            return redirect(ShowAllCartItems)
+        else:
+            qty=request.POST["qty"]
+            item.qty=qty
+            item.save()
+            return redirect(ShowAllCartItems)

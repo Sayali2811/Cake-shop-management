@@ -1,5 +1,35 @@
 {%extends "homepage.html" %}
 {% block content%}
+<script type="text/javascript">
+    function getConfirm(myid)
+    {
+        result=confirm("Are you sure you want to delete?(y/n)")
+        if(result){
+           myform= document.getElementById(myid);
+           myform.submit();
+        }
+    }
+    function increment(myid)
+    {
+
+        qty=document.getElementById(myid);
+        if(qty.value<10)
+        {
+            qty.value=parseInt(qty.value)+1;
+        }
+       
+        
+    }
+    function decrement(myid)
+    {
+        qty=document.getElementById(myid);
+        if(qty.value>1)
+        {
+            qty.value=parseInt(qty.value)- 1;
+        }
+        
+    }
+</script>
 <center>
   <h1>Cake Details</h1>
     <table class="table">
@@ -8,19 +38,29 @@
             <th>Cake Price</th>
             <th>Subtotal</th>
             <th>Cake Description</th>
-            <th>Qunatity</th>
+            <th>Quantity</th>
             
             
         </tr>
         {%for item in items%}
+        <form method="POST" id="myform{{item.cake.id}}">
+            {% csrf_token%}
+        
         <tr>
-            <td>{{item.cake.pname}}</td>
+            <td><input type="hidden" name="cakeid" value="{{item.cake.id}}">
+                {{item.cake.pname}}</td>
             <td>{{item.cake.price}}</td>
             <td>{% widthratio item.qty 1 item.cake.price %}</td>
             <td>{{item.cake.description}}</td>
-            <td>{{item.qty}}</td>
-            <td><button class="btn btn-danger" type="submit">Remove</button></td>
+            <td><button class="btn btn-warning" type="button" onclick="decrement('qty{{item.cake.id}}')">-</button>
+                <input type="text" name="qty" id="qty{{item.cake.id}}" value="{{item.qty}}"
+                size="2" text-align="center">
+                <button class="btn btn-warning" type="button" onclick="increment('qty{{item.cake.id}}')">+</button></td>
+            <td><button class="btn btn-danger" type="submit"  name="action" value="update">Update</button></td>
+            <td><button class="btn btn-danger" type="button" onclick="getConfirm('{{item.cake.id}}')" name="action" value="remove">Remove</button></td>
+            
         </tr>
+    </form>
         {%endfor%}
     </table>
     <hr>
