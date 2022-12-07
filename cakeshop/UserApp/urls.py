@@ -11,6 +11,7 @@ urlpatterns = [
     path('signout',views.signout),
     path("addToCart",views.addToCart),
     path("ShowAllCartItems",views.ShowAllCartItems),
-
+    path("MakePayment",views.MakePayment),
+    path('removeItem',views.removeItem),
 
 ]

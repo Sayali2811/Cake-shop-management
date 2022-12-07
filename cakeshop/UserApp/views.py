@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
-from AdminApp.models import Category, Product, UserInfo
-from UserApp.models import MyCart
+from AdminApp.models import Category, Product, UserInfo,PaymentMaster
+from UserApp.models import MyCart,OrderMaster
+from django.contrib import messages
 # Create your views here.
 
 
@@ -16,11 +17,14 @@ def login(request):
         return render(request, "login.html", {})
     else:
         uname = request.POST["uname"]
-        password = request.POST["password"]
-        user = UserInfo.objects.get(uname=uname, password=password)
+        password = request.POST["password"]        
         try:
-            user = UserInfo.objects.get(uname=uname, password=password)
+            uname = UserInfo.objects.get(uname=uname, password=password)
+            messages.success(request,'Login Successful!')
+            return redirect(login)
+
         except:
+            messages.success(request,'Login Invalid!')
             return redirect(login)
         else:
             # Create the session
@@ -86,24 +90,62 @@ def ShowAllCartItems(request):
     uname=request.session['uname']
     user=UserInfo.objects.get(uname=uname)
     if(request.method=='GET'):
-
         cartitems=MyCart.objects.filter(user=user)
         total=0
         for item in cartitems:
             total += (item.qty)*(item.cake.price)
-        
         request.session["total"] = total
         return render(request,"ShowAllCart.html",{"items":cartitems})
     else:
-        action=request.POST['action']
         id=request.POST['cakeid']
         cake=Product.objects.get(id=id)
         item=MyCart.objects.get(user=user,cake=cake)
-        if(action=='remove'):
-            item.delete()
-            return redirect(ShowAllCartItems)
+        qty=request.POST["qty"]
+        item.qty=qty
+        item.save()
+        return redirect(ShowAllCartItems)
+
+
+def removeItem(request):
+    uname = request.session["uname"]
+    user = UserInfo.objects.get(uname = uname)
+    id = request.POST["cakeid"]
+    cake = Product.objects.get(id=id)
+    item = MyCart.objects.get(user=user,cake=cake)   
+    item.delete()
+    return redirect(ShowAllCartItems)
+
+def MakePayment(request):
+    if(request.method == 'GET'):
+        return render(request,'MakePayment.html',{})
+    else:
+        cardno=request.POST['cardno']
+        cvv=request.POST['cvv']
+        expiry=request.POST['expiry']
+        try:
+            buyer=PaymentMaster.objects.get(cardno=cardno,cvv=cvv,expiry=expiry)
+        except:
+            return redirect(MakePayment)
         else:
-            qty=request.POST["qty"]
-            item.qty=qty
-            item.save()
-            return redirect(ShowAllCartItems)
+            owner=PaymentMaster.objects.get(cardno='222',cvv='222',expiry='12/2025')
+            owner.balance+=request.session["total"]
+            buyer.balance-=request.session['total']
+            owner.save()
+            buyer.save()
+            #delete items from cart
+            uname=request.session['uname']
+            user=UserInfo.objects.get(uname=uname)
+            order=OrderMaster()
+            order.user= user
+            order.amount=request.session["total"]
+            # order.dateOfOrder=datetime.now()
+            #Fetch all data
+            details=" "
+            items=MyCart.objects.filter(user=user)
+            for item in items:
+                details+=item.cake.pname+" "
+                item.delete()
+            order.details=details
+            order.save()
+            return redirect(homepage)
+

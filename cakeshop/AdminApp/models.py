@@ -33,3 +33,13 @@ class UserInfo(models.Model):
 
     class Meta:
         db_table = 'UserInfo'
+
+class PaymentMaster(models.Model):
+    cardno= models.CharField(max_length=20)
+    cvv= models.CharField(max_length=4)
+    expiry= models.CharField(max_length=20)
+    balance=models.FloatField(default=10000)
+
+    class Meta:
+        db_table= "Payment Master"
+    
